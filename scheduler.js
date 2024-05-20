@@ -45,16 +45,22 @@ function main(configPath) {
 
     let executions = 0;
 
-    const intervalId = setInterval(() => {
+    const executeAndSchedule = async () => {
         if (runCount > 0 && executions >= runCount) {
-            clearInterval(intervalId);
             console.log('Scheduler stopped after reaching the execution limit.');
             return;
         }
 
-        runScrap(config, skippedUrls);
+        await runScrap(config, skippedUrls);
         executions += 1;
-    }, intervalMs);
+
+        if (runCount === 0 || executions < runCount) {
+            setTimeout(executeAndSchedule, intervalMs);
+        }
+    };
+
+    // Initial execution
+    executeAndSchedule();
 }
 
 // Read the config path from command line arguments

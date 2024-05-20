@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  scheduler:
+    build: .
+    volumes:
+      - ./config.json:/config.json
+      - ./downloads:/downloads
+    environment:
+      - NODE_ENV=production
+    command: ["node", "scheduler.js", "/config.json"]

@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const scrap = require('./scrap');
 
+let keepRunning = true;
+
 // Function to load configuration from .js or .json file
 function loadConfig(configPath) {
     const ext = path.extname(configPath);
@@ -34,7 +36,7 @@ async function runScrap(config, skippedUrls) {
 }
 
 // Main function to read the config and start the scheduler
-function main(configPath) {
+async function main(configPath) {
     const config = loadConfig(configPath);
 
     const { interval, runCount, dbPath } = config;
@@ -51,6 +53,11 @@ function main(configPath) {
             return;
         }
 
+        if (!keepRunning) {
+            console.log('Scheduler stopped by signal.');
+            return;
+        }
+
         await runScrap(config, skippedUrls);
         executions += 1;
 
@@ -60,8 +67,19 @@ function main(configPath) {
     };
 
     // Initial execution
-    executeAndSchedule();
+    await executeAndSchedule();
 }
+
+// Handle termination signals
+process.on('SIGINT', () => {
+    console.log('Received SIGINT. Shutting down...');
+    keepRunning = false;
+});
+
+process.on('SIGTERM', () => {
+    console.log('Received SIGTERM. Shutting down...');
+    keepRunning = false;
+});
 
 // Read the config path from command line arguments
 const args = process.argv.slice(2);

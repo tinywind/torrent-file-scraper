@@ -2,11 +2,15 @@
   "webpageUrls": [
     {
       "url": "YOUR_FIRST_WEBPAGE_URL",
-      "pattern": "YOUR_FIRST_FILE_PATTERN"
+      "scrapingUrlPattern": "YOUR_FIRST_SCRAPE_URL",
+      "filePattern": "YOUR_FIRST_FILE_PATTERN",
+      "depth": 2
     },
     {
       "url": "YOUR_SECOND_WEBPAGE_URL",
-      "pattern": "YOUR_SECOND_FILE_PATTERN"
+      "scrapingUrlPattern": "YOUR_SECOND_SCRAPE_URL",
+      "filePattern": "YOUR_SECOND_FILE_PATTERN",
+      "depth": 2
     }
   ],
   "downloadLocation": "YOUR_DOWNLOAD_LOCATION",

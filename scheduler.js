@@ -20,15 +20,19 @@ function loadConfig(configPath) {
 async function runScrap(config, skippedUrls) {
     const { webpageUrls, downloadLocation, dbPath } = config;
     console.log('Running scrap function...');
-    for (const { url, pattern } of webpageUrls) {
+    for (const { url, scrapingUrlPattern, filePattern, depth } of webpageUrls) {
         try {
-            const filePattern = new RegExp(pattern);
-            const downloadedFiles = await scrap(url, filePattern, downloadLocation, skippedUrls);
+            const scrapingUrlPatternExp = new RegExp(scrapingUrlPattern);
+            const filePatternExp = new RegExp(filePattern);
+
+            const clonedSkippedUrls = new Map();
+            skippedUrls.forEach((value, key) => clonedSkippedUrls.set(key, value));
+
+            const downloadedFiles = await scrap(url, scrapingUrlPatternExp, filePatternExp, downloadLocation, depth, clonedSkippedUrls);
             console.log('Downloaded files for', url, ':', downloadedFiles);
 
-            // Update skippedUrls and write to db
-            downloadedFiles.forEach(fileUrl => skippedUrls.add(fileUrl));
-            fs.writeFileSync(dbPath, JSON.stringify(Array.from(skippedUrls), null, 2));
+            downloadedFiles.forEach(fileUrl => skippedUrls.set(fileUrl, {depth: 0, downloaded: true, isFile: true, links: []}));
+            fs.writeFileSync(dbPath, JSON.stringify(Array.from(skippedUrls.keys())));
         } catch (err) {
             console.error(`Error running scrap function for ${url}:`, err);
         }
@@ -43,7 +47,9 @@ async function main(configPath) {
     const intervalMs = interval * 1000;
 
     // Read scrap.db and initialize skippedUrls
-    const skippedUrls = new Set(fs.existsSync(dbPath) ? JSON.parse(fs.readFileSync(dbPath)) : []);
+    const skippedUrls = new Map();
+    const urls = fs.existsSync(dbPath) ? JSON.parse(fs.readFileSync(dbPath)) : []
+    urls.forEach(url => skippedUrls.set(url, {depth: 0, downloaded: true, isFile: true, links: []}));
 
     let executions = 0;
 
@@ -74,11 +80,13 @@ async function main(configPath) {
 process.on('SIGINT', () => {
     console.log('Received SIGINT. Shutting down...');
     keepRunning = false;
+    process.exit(0);
 });
 
 process.on('SIGTERM', () => {
     console.log('Received SIGTERM. Shutting down...');
     keepRunning = false;
+    process.exit(0);
 });
 
 // Read the config path from command line arguments

@@ -40,3 +40,6 @@ out/
 *.lock
 node_modules
 .env
+config.private.js
+*.db
+downloads/
